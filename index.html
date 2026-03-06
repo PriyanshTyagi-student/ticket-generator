@@ -290,6 +290,38 @@
       100% { transform: rotate(360deg); }
     }
 
+    .hackathon-members-section {
+      background: rgba(6, 182, 212, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      border: 2px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .hackathon-members-section h3 {
+      color: #06b6d4;
+      margin-bottom: 15px;
+    }
+
+    .member-card {
+      background: rgba(15, 23, 42, 0.8);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 2px solid rgba(6, 182, 212, 0.2);
+    }
+
+    .member-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .member-number {
+      color: #06b6d4;
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: inline-block;
+    }
+
     @media (max-width: 768px) {
       .form-row,
       .action-buttons {
@@ -413,6 +445,24 @@
         <div class="form-group" id="teamMembersSection" style="display: none;">
           <label>Team Members (comma-separated)</label>
           <textarea id="teamMembers" placeholder="Enter team member names separated by commas"></textarea>
+        </div>
+
+        <!-- Hackathon Team Members Section -->
+        <div class="form-group" id="hackathonSection" style="display: none;">
+          <label>Hackathon Team Members *</label>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 10px; color: #94a3b8;">Number of Team Members (3-6) *</label>
+            <select id="hackathonTeamCount" style="width: 150px;">
+              <option value="">Select Count</option>
+              <option value="3">3 Members</option>
+              <option value="4">4 Members</option>
+              <option value="5">5 Members</option>
+              <option value="6">6 Members</option>
+            </select>
+          </div>
+          <div id="hackathonMembersForm" class="hackathon-members-section" style="display: none;">
+            <!-- Dynamic member input fields will be generated here -->
+          </div>
         </div>
 
         <!-- Pass Type -->
@@ -545,6 +595,64 @@
       }
     });
 
+    // Hackathon team member selection
+    document.addEventListener('change', function(e) {
+      if (e.target.name === 'activities' && e.target.value === 'Hackathon') {
+        const hackathonSection = document.getElementById('hackathonSection');
+        hackathonSection.style.display = e.target.checked ? 'block' : 'none';
+        
+        if (!e.target.checked) {
+          // Clear when unchecked
+          document.getElementById('hackathonTeamCount').value = '';
+          document.getElementById('hackathonMembersForm').style.display = 'none';
+          document.getElementById('hackathonMembersForm').innerHTML = '';
+        }
+      }
+    });
+
+    // Generate member input fields based on count
+    document.getElementById('hackathonTeamCount').addEventListener('change', function() {
+      const count = parseInt(this.value);
+      const membersForm = document.getElementById('hackathonMembersForm');
+      
+      if (count < 3 || count > 6) {
+        membersForm.style.display = 'none';
+        membersForm.innerHTML = '';
+        return;
+      }
+      
+      let html = '<h3>Enter Team Member Details</h3>';
+      for (let i = 1; i <= count; i++) {
+        html += `
+          <div class="member-card">
+            <div class="member-number">Member ${i}</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" class="hackathon-member-name" placeholder="Member ${i} name" required>
+              </div>
+              <div class="form-group">
+                <label>Email *</label>
+                <input type="email" class="hackathon-member-email" placeholder="member${i}@example.com" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Mobile Number *</label>
+                <input type="tel" class="hackathon-member-mobile" placeholder="10-digit number" maxlength="10" required>
+              </div>
+              <div class="form-group">
+                <label>City *</label>
+                <input type="text" class="hackathon-member-city" placeholder="City" required>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      membersForm.innerHTML = html;
+      membersForm.style.display = 'block';
+    });
+
     // Update amount when pass type changes
     document.getElementById('passType').addEventListener('change', function() {
       const amountInput = document.getElementById('amountPaid');
@@ -585,6 +693,7 @@
       }
 
       const isVisitorCategory = formData.category === 'Visitor';
+      const isHackathon = formData.subCategory.includes('Hackathon');
 
       if (!isVisitorCategory && formData.subCategory.length === 0) {
         showAlert('Please select at least one activity', 'error');
@@ -596,39 +705,107 @@
         formData.subCategory = ['Visitor'];
       }
 
+      // Validate Hackathon team members if selected
+      let hackathonMembers = [];
+      if (isHackathon) {
+        const memberNames = document.querySelectorAll('.hackathon-member-name');
+        if (memberNames.length === 0) {
+          showAlert('Please enter hackathon team member details', 'error');
+          return;
+        }
+
+        for (let i = 0; i < memberNames.length; i++) {
+          const name = memberNames[i].value.trim();
+          const email = document.querySelectorAll('.hackathon-member-email')[i].value.trim();
+          const mobile = document.querySelectorAll('.hackathon-member-mobile')[i].value.trim();
+          const city = document.querySelectorAll('.hackathon-member-city')[i].value.trim();
+
+          if (!name || !email || !mobile || !city) {
+            showAlert('Please fill all team member details', 'error');
+            return;
+          }
+          if (mobile.length !== 10) {
+            showAlert(`Member ${i + 1} mobile must be 10 digits`, 'error');
+            return;
+          }
+          hackathonMembers.push({ name, email, mobile, city });
+        }
+      }
+
       // Show loading
       const btn = document.getElementById('generateBtn');
       btn.disabled = true;
       btn.innerHTML = '<div class="spinner"></div>';
 
       try {
-        console.log('🔄 Sending request to:', `${BACKEND_URL}/api/ticket/generate`);
-        console.log('📦 Form data:', formData);
-        
-        // Call backend API
-        const response = await fetch(`${BACKEND_URL}/api/ticket/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(formData)
-        });
+        // If Hackathon, generate multiple tickets
+        if (isHackathon && hackathonMembers.length > 0) {
+          let successCount = 0;
+          const tickets = [];
+          
+          for (let member of hackathonMembers) {
+            const memberData = { ...formData };
+            memberData.fullName = member.name;
+            memberData.email = member.email;
+            memberData.mobile = member.mobile;
+            memberData.city = member.city;
+            
+            console.log('🔄 Generating ticket for:', member.name);
+            
+            const response = await fetch(`${BACKEND_URL}/api/ticket/generate`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(memberData)
+            });
 
-        console.log('📡 Response status:', response.status);
-        
-        const data = await response.json();
-        console.log('📥 Response data:', data);
+            if (!response.ok) {
+              const data = await response.json();
+              throw new Error(`Failed for ${member.name}: ${data.msg}`);
+            }
+            
+            const data = await response.json();
+            tickets.push(data);
+            successCount++;
+            console.log('✅ Ticket generated for:', member.name);
+          }
+          
+          // Store the first ticket for display
+          currentTicketData = tickets[0];
+          currentTicketData.hackathonTickets = tickets;
+          
+          displayTicket(currentTicketData);
+          showAlert(`✅ Successfully generated ${successCount} tickets for hackathon team!`, 'success');
+        } else {
+          // Single ticket generation
+          console.log('🔄 Sending request to:', `${BACKEND_URL}/api/ticket/generate`);
+          console.log('📦 Form data:', formData);
+          
+          const response = await fetch(`${BACKEND_URL}/api/ticket/generate`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+          });
 
-        if (!response.ok) {
-          throw new Error(data.msg || 'Failed to generate ticket');
+          console.log('📡 Response status:', response.status);
+          
+          const data = await response.json();
+          console.log('📥 Response data:', data);
+
+          if (!response.ok) {
+            throw new Error(data.msg || 'Failed to generate ticket');
+          }
+
+          // Store ticket data
+          currentTicketData = data;
+
+          // Display ticket
+          displayTicket(data);
+          showAlert('Ticket generated successfully!', 'success');
         }
-
-        // Store ticket data
-        currentTicketData = data;
-
-        // Display ticket
-        displayTicket(data);
-        showAlert('Ticket generated successfully!', 'success');
 
       } catch (error) {
         console.error('❌ Error details:', error);
@@ -862,6 +1039,10 @@
       document.getElementById('ticketPreview').classList.remove('active');
       document.getElementById('teamMembersSection').style.display = 'none';
       document.getElementById('activitiesSection').style.display = 'block';
+      document.getElementById('hackathonSection').style.display = 'none';
+      document.getElementById('hackathonTeamCount').value = '';
+      document.getElementById('hackathonMembersForm').innerHTML = '';
+      document.getElementById('hackathonMembersForm').style.display = 'none';
       currentTicketData = null;
       document.getElementById('generateBtn').disabled = false;
       document.getElementById('generateBtn').innerHTML = '🎟️ Generate Ticket';
