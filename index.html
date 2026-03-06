@@ -515,6 +515,11 @@
         <button type="submit" class="btn" id="generateBtn">
           🎟️ Generate Ticket
         </button>
+
+        <!-- Test Email Button -->
+        <button type="button" class="btn btn-secondary" onclick="testSendEmail()" style="margin-top: 10px;">
+          📧 Test Send Email
+        </button>
       </form>
     </div>
 
@@ -557,7 +562,7 @@
 
   <script>
     // Backend URL - Update this with your backend server
-    const BACKEND_URL = 'https://techmnhub-backend.onrender.com'; // Change to your backend URL
+    const BACKEND_URL = 'http://localhost:5000'; // Change to your backend URL
     
     let currentTicketData = null;
 
@@ -1057,6 +1062,80 @@
       setTimeout(() => {
         alert.classList.remove('active');
       }, 5000);
+    }
+
+    async function testSendEmail() {
+      // First, generate a test ticket to get a userId
+      const testFormData = {
+        fullName: 'Test User ' + Date.now(),
+        mobile: '9876543210',
+        email: `test_${Date.now()}@example.com`,
+        city: 'Muzaffarnagar',
+        college: 'Test College',
+        courseYear: 'B.Tech 2nd Year',
+        category: 'Individual',
+        subCategory: ['Presentation'],
+        teamMembers: [],
+        passName: 'Pro Participation - ₹150',
+        amountPaid: 150,
+        paymentMode: 'Cash',
+        portfolio: '',
+        github: '',
+        instagram: ''
+      };
+
+      const btn = event.target;
+      btn.disabled = true;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<div class="spinner"></div>';
+
+      try {
+        console.log('📧 Generating test ticket for email...');
+        
+        // Step 1: Generate test ticket
+        const genResponse = await fetch(`${BACKEND_URL}/api/ticket/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(testFormData)
+        });
+
+        if (!genResponse.ok) {
+          const data = await genResponse.json();
+          throw new Error(`Failed to generate test ticket: ${data.msg}`);
+        }
+
+        const ticketData = await genResponse.json();
+        console.log('✅ Test ticket generated:', ticketData.registrationId);
+
+        // Step 2: Send test email
+        console.log('📤 Sending test email...');
+        const emailResponse = await fetch(`${BACKEND_URL}/api/ticket/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            userId: ticketData.user._id
+          })
+        });
+
+        const emailData = await emailResponse.json();
+
+        if (!emailResponse.ok) {
+          throw new Error(emailData.msg || 'Failed to send email');
+        }
+
+        console.log('✅ Test email sent to:', emailData.email);
+        showAlert(`✅ Test email sent successfully to ${emailData.email}!\n\nTest Ticket Registration ID: ${ticketData.registrationId}`, 'success');
+      } catch (error) {
+        console.error('❌ Error:', error);
+        showAlert(`❌ Test email failed: ${error.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
     }
   </script>
 </body>
