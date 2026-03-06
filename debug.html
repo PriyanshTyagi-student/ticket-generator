@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket Generator - Debug Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #0f172a;
+      color: #fff;
+    }
+    .section {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 2px solid #06b6d4;
+    }
+    button {
+      background: #06b6d4;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #0891b2;
+    }
+    .output {
+      background: #0f172a;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+      color: #94a3b8;
+      word-break: break-all;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .success {
+      color: #22c55e;
+    }
+    .error {
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="section">
+    <h1>🎫 Ticket Generator Debug</h1>
+    <p>Test the ticket generator form submission</p>
+  </div>
+
+  <div class="section">
+    <h3>Step 1: Check Backend Connection</h3>
+    <button onclick="testBackend()">Test Backend Health</button>
+    <div id="backendOutput" class="output"></div>
+  </div>
+
+  <div class="section">
+    <h3>Step 2: Test Form Submission</h3>
+    <button onclick="testFormSubmit()">Submit Test Ticket</button>
+    <div id="formOutput" class="output"></div>
+  </div>
+
+  <div class="section">
+    <h3>Step 3: Go to Main Generator</h3>
+    <a href="index.html" style="display: inline-block; background: #06b6d4; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-top: 10px;">
+      Open Ticket Generator
+    </a>
+  </div>
+
+  <script>
+    const BACKEND_URL = 'http://localhost:5000';
+
+    async function testBackend() {
+      const output = document.getElementById('backendOutput');
+      output.innerHTML = '<p>Testing...</p>';
+
+      try {
+        console.log('Testing backend...');
+        const response = await fetch(`${BACKEND_URL}/api/ticket/health`, {
+          method: 'GET'
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          output.innerHTML = `<p class="success">✅ Backend Connected!</p><p>${JSON.stringify(data, null, 2)}</p>`;
+        } else {
+          output.innerHTML = `<p class="error">❌ Backend Error: ${response.status}</p>`;
+        }
+      } catch (error) {
+        output.innerHTML = `<p class="error">❌ Connection Failed</p><p>${error.message}</p>`;
+      }
+    }
+
+    async function testFormSubmit() {
+      const output = document.getElementById('formOutput');
+      output.innerHTML = '<p>Submitting test ticket...</p>';
+
+      const testData = {
+        fullName: "Test User " + Date.now(),
+        mobile: "9876543210",
+        email: `test_${Date.now()}@example.com`,
+        city: "Muzaffarnagar",
+        college: "Test College",
+        courseYear: "B.Tech 2nd Year",
+        category: "Individual",
+        subCategory: ["Coding"],
+        teamMembers: [],
+        passName: "Pro Participation - ₹150",
+        amountPaid: 150,
+        paymentMode: "Cash",
+        portfolio: "",
+        github: "",
+        instagram: ""
+      };
+
+      try {
+        console.log('Sending data:', testData);
+        
+        const response = await fetch(`${BACKEND_URL}/api/ticket/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(testData)
+        });
+
+        const data = await response.json();
+        console.log('Response:', data);
+
+        if (response.ok) {
+          output.innerHTML = `
+            <p class="success">✅ Ticket Generated Successfully!</p>
+            <p><strong>Registration ID:</strong> ${data.registrationId}</p>
+            ${data.qrCode ? `<img src="${data.qrCode}" style="width: 150px; margin-top: 10px; border-radius: 8px;">` : ''}
+            <p><strong>Full Response:</strong></p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        } else {
+          output.innerHTML = `<p class="error">❌ Error: ${data.msg || 'Unknown error'}</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        output.innerHTML = `<p class="error">❌ Request Failed</p><p>${error.message}</p>`;
+      }
+    }
+
+    // Auto-test on load
+    window.addEventListener('load', () => {
+      console.log('Debug page loaded');
+      console.log('Backend URL:', BACKEND_URL);
+    });
+  </script>
+</body>
+</html>
