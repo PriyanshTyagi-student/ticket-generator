@@ -584,9 +584,16 @@
         return;
       }
 
-      if (formData.category !== 'Visitor' && formData.subCategory.length === 0) {
+      const isVisitorCategory = formData.category === 'Visitor';
+
+      if (!isVisitorCategory && formData.subCategory.length === 0) {
         showAlert('Please select at least one activity', 'error');
         return;
+      }
+
+      // Backend currently requires at least one subCategory value.
+      if (isVisitorCategory && formData.subCategory.length === 0) {
+        formData.subCategory = ['Visitor'];
       }
 
       // Show loading
@@ -646,7 +653,8 @@
       // Update Registration ID
       document.getElementById('registrationId').textContent = data.registrationId;
 
-      const activityText = data.user.subCategory && data.user.subCategory.length > 0
+      const isVisitorCategory = data.user.category === 'Visitor';
+      const activityText = !isVisitorCategory && data.user.subCategory && data.user.subCategory.length > 0
         ? data.user.subCategory.join(', ')
         : 'N/A';
       
@@ -711,7 +719,8 @@
       const data = currentTicketData.user;
       const qrCode = currentTicketData.qrCode;
       const regId = currentTicketData.registrationId;
-      const activityText = data.subCategory && data.subCategory.length > 0
+      const isVisitorCategory = data.category === 'Visitor';
+      const activityText = !isVisitorCategory && data.subCategory && data.subCategory.length > 0
         ? data.subCategory.join(', ')
         : 'N/A';
       
