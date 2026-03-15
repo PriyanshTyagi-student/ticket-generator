@@ -3,7 +3,534 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline Ticket Generator - Zonex 2026</title>
+  <title>Offline Ticket Generator - TechMNHub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; min-height: 100vh; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 40px; padding: 30px; background: rgba(6, 182, 212, 0.1); border-radius: 20px; border: 2px solid rgba(6, 182, 212, 0.3); }
+    .header h1 { font-size: 2.5rem; color: #06b6d4; margin-bottom: 10px; }
+    .header p { color: #94a3b8; font-size: 1.1rem; }
+    .form-section { background: #1e293b; padding: 30px; border-radius: 20px; margin-bottom: 20px; border: 2px solid rgba(255,255,255,0.1); }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; color: #94a3b8; font-weight: 600; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 16px; background: rgba(15,23,42,0.8); border: 2px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 1rem; transition: all 0.3s; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #06b6d4; background: rgba(15,23,42,1); }
+    .form-group select option { background: #1e293b; }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; }
+    .checkbox-item { display: flex; align-items: center; background: rgba(6,182,212,0.1); padding: 10px 15px; border-radius: 8px; border: 2px solid transparent; cursor: pointer; transition: all 0.3s; }
+    .checkbox-item:hover { border-color: #06b6d4; }
+    .checkbox-item input { width: auto; margin-right: 8px; cursor: pointer; }
+    .btn { padding: 15px 30px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border: none; border-radius: 10px; color: #fff; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: all 0.3s; width: 100%; margin-top: 20px; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(6,182,212,0.4); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: linear-gradient(135deg, #475569 0%, #334155 100%); }
+    .ticket-preview { background: #1e293b; padding: 30px; border-radius: 20px; border: 2px solid #06b6d4; margin-top: 30px; display: none; }
+    .ticket-preview.active { display: block; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .ticket-header { text-align: center; margin-bottom: 30px; }
+    .ticket-header h2 { font-size: 2rem; color: #06b6d4; margin-bottom: 5px; }
+    .ticket-header p { color: #94a3b8; }
+    .qr-code-container { text-align: center; margin: 30px 0; }
+    .qr-code-container img { width: 200px; height: 200px; border-radius: 10px; border: 2px solid #06b6d4; }
+    .registration-id { text-align: center; font-size: 2rem; font-weight: bold; color: #06b6d4; letter-spacing: 3px; margin: 20px 0; }
+    .ticket-details { background: #0f172a; padding: 20px; border-radius: 10px; margin-top: 20px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: #94a3b8; }
+    .detail-value { color: #fff; font-weight: 600; }
+    .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
+    .alert { padding: 15px; border-radius: 10px; margin-bottom: 20px; display: none; }
+    .alert.active { display: block; animation: fadeIn 0.3s; }
+    .alert-success { background: rgba(34,197,94,0.2); border: 2px solid #22c55e; color: #22c55e; }
+    .alert-error { background: rgba(239,68,68,0.2); border: 2px solid #ef4444; color: #ef4444; }
+    .spinner { border: 4px solid rgba(6,182,212,0.2); border-top: 4px solid #06b6d4; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .event-banner { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.4); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; color: #67e8f9; font-size: 0.95rem; display: none; }
+    .event-banner.active { display: block; }
+    .ticket-type-cards { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+    .ticket-type-card { flex: 1 1 180px; background: rgba(6,182,212,0.08); border: 2px solid rgba(6,182,212,0.2); border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.2s; }
+    .ticket-type-card:hover { border-color: #06b6d4; }
+    .ticket-type-card.selected { border-color: #06b6d4; background: rgba(6,182,212,0.2); }
+    .ticket-type-card .tt-name { font-weight: 700; color: #e2e8f0; }
+    .ticket-type-card .tt-price { font-size: 1.3rem; color: #06b6d4; font-weight: 900; margin: 4px 0; }
+    .ticket-type-card .tt-desc { font-size: 0.8rem; color: #94a3b8; }
+    @media (max-width: 768px) { .form-row, .action-buttons { grid-template-columns: 1fr; } .header h1 { font-size: 1.8rem; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎫 Offline Ticket Generator</h1>
+      <p>TechMNHub – Manual Registration System</p>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <div class="form-section">
+      <h2 style="margin-bottom: 25px; color: #06b6d4;">🎪 Select Event</h2>
+
+      <div class="form-group">
+        <label>Event *</label>
+        <select id="eventSelect" required>
+          <option value="">Loading events...</option>
+        </select>
+      </div>
+
+      <div id="eventBanner" class="event-banner"></div>
+    </div>
+
+    <div class="form-section">
+      <h2 style="margin-bottom: 25px; color: #06b6d4;">📝 Participant Details</h2>
+
+      <form id="ticketForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="fullName" required placeholder="Enter full name">
+          </div>
+          <div class="form-group">
+            <label>Mobile Number *</label>
+            <input type="tel" id="mobile" required placeholder="10-digit mobile number" maxlength="10">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email Address *</label>
+            <input type="email" id="email" required placeholder="email@example.com">
+          </div>
+          <div class="form-group">
+            <label>City *</label>
+            <input type="text" id="city" required placeholder="Enter city">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>College/Institution *</label>
+            <input type="text" id="college" required placeholder="College name">
+          </div>
+          <div class="form-group">
+            <label>Course & Year *</label>
+            <input type="text" id="courseYear" required placeholder="e.g., B.Tech 2nd Year">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Category *</label>
+          <select id="category" required>
+            <option value="">Select Category</option>
+            <option value="Individual">Individual</option>
+            <option value="Team">Team</option>
+            <option value="Visitor">Visitor</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Activities/Skills *</label>
+          <div class="checkbox-group" id="activitiesGroup">
+            <label class="checkbox-item"><input type="checkbox" name="activities" value="Hackathon"> Hackathon</label>
+            <label class="checkbox-item"><input type="checkbox" name="activities" value="Coding"> Coding</label>
+            <label class="checkbox-item"><input type="checkbox" name="activities" value="Design"> Design</label>
+            <label class="checkbox-item"><input type="checkbox" name="activities" value="Photography"> Photography</label>
+            <label class="checkbox-item"><input type="checkbox" name="activities" value="Dance"> Dance</label>
+            <label class="checkbox-item"><input type="checkbox" name="activities" value="Music"> Music</label>
+            <label class="checkbox-item"><input type="checkbox" name="activities" value="Drama"> Drama</label>
+            <label class="checkbox-item"><input type="checkbox" name="activities" value="Art"> Art</label>
+          </div>
+        </div>
+
+        <div class="form-group" id="teamMembersSection" style="display: none;">
+          <label>Team Members (comma-separated)</label>
+          <textarea id="teamMembers" placeholder="Enter team member names separated by commas"></textarea>
+        </div>
+
+        <!-- Dynamic ticket type selection -->
+        <div class="form-group" id="ticketTypeSection">
+          <label>Pass / Ticket Type *</label>
+          <div class="ticket-type-cards" id="ticketTypeCards">
+            <!-- populated by JS -->
+          </div>
+          <input type="hidden" id="passType" required>
+          <input type="hidden" id="passName">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Amount Paid *</label>
+            <input type="number" id="amountPaid" required placeholder="Auto-filled from pass" min="0">
+          </div>
+          <div class="form-group">
+            <label>Payment Mode *</label>
+            <select id="paymentMode" required>
+              <option value="">Select Mode</option>
+              <option value="Cash">Cash</option>
+              <option value="UPI">UPI</option>
+              <option value="Card">Card</option>
+              <option value="Complimentary">Complimentary</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Portfolio URL</label>
+            <input type="url" id="portfolio" placeholder="https://portfolio.com">
+          </div>
+          <div class="form-group">
+            <label>GitHub Username</label>
+            <input type="text" id="github" placeholder="@username">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Instagram Handle</label>
+          <input type="text" id="instagram" placeholder="@handle">
+        </div>
+
+        <button type="submit" class="btn" id="generateBtn">
+          🎟️ Generate Ticket
+        </button>
+      </form>
+    </div>
+
+    <div id="ticketPreview" class="ticket-preview">
+      <div class="ticket-header">
+        <h2 id="previewEventName">TechMNHub Event</h2>
+        <p id="previewEventTagline">Where Talent Takes Shape</p>
+      </div>
+
+      <div class="qr-code-container">
+        <img id="qrCodeImage" src="" alt="QR Code">
+        <p style="margin-top: 10px; color: #94a3b8; font-size: 0.9rem;">Scan at venue entrance</p>
+      </div>
+
+      <div class="registration-id" id="registrationId">LOADING...</div>
+
+      <div class="ticket-details" id="ticketDetails"></div>
+
+      <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="downloadTicketHTML()">📥 Download HTML</button>
+        <button class="btn" onclick="sendTicketEmail()">📧 Send Email</button>
+      </div>
+
+      <div style="margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="resetForm()">➕ Generate Another Ticket</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BACKEND_URL = 'https://techmnhub-backend.onrender.com';
+    let currentTicketData = null;
+    let selectedEvent = null;
+    let ticketTypes = [];
+
+    // ── Load events on page load ──────────────────────────────────────────────
+    window.addEventListener('load', async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/events/public`);
+        const events = await res.json();
+        const sel = document.getElementById('eventSelect');
+        sel.innerHTML = '<option value="">-- Select an event --</option>';
+        (Array.isArray(events) ? events : []).forEach(ev => {
+          const opt = document.createElement('option');
+          opt.value = ev._id;
+          opt.textContent = ev.name + (ev.status === 'closed' ? ' [Closed]' : '');
+          opt.disabled = ev.status === 'closed';
+          sel.appendChild(opt);
+        });
+      } catch (err) {
+        showAlert('Could not load events from backend. Make sure the backend is running.', 'error');
+        document.getElementById('eventSelect').innerHTML = '<option value="">Failed to load events</option>';
+      }
+    });
+
+    // ── When an event is selected, load its ticket types ────────────────────
+    document.getElementById('eventSelect').addEventListener('change', async function () {
+      const eventId = this.value;
+      if (!eventId) {
+        selectedEvent = null;
+        ticketTypes = [];
+        renderTicketTypes([]);
+        document.getElementById('eventBanner').classList.remove('active');
+        return;
+      }
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/events/${eventId}`);
+        const ev = await res.json();
+        if (!res.ok) throw new Error(ev.msg || 'Failed to load event');
+        selectedEvent = ev;
+        // ticketTypes comes back as the availability array from getEventById
+        ticketTypes = Array.isArray(ev.ticketTypes) ? ev.ticketTypes : [];
+
+        const banner = document.getElementById('eventBanner');
+        const date = ev.date ? new Date(ev.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+        banner.textContent = `📅 ${ev.name}${date ? '  •  ' + date : ''}${ev.city ? '  •  ' + ev.city : ''}`;
+        banner.classList.add('active');
+
+        renderTicketTypes(ticketTypes);
+      } catch (err) {
+        showAlert(err.message, 'error');
+      }
+    });
+
+    // ── Render ticket-type cards ─────────────────────────────────────────────
+    function renderTicketTypes(types) {
+      const container = document.getElementById('ticketTypeCards');
+      document.getElementById('passType').value = '';
+      document.getElementById('passName').value = '';
+      document.getElementById('amountPaid').value = '';
+
+      if (!types || types.length === 0) {
+        container.innerHTML = '<p style="color:#94a3b8;font-size:0.9rem;">Select an event above to see available passes.</p>';
+        return;
+      }
+      container.innerHTML = '';
+      types.forEach(tt => {
+        const card = document.createElement('div');
+        card.className = 'ticket-type-card';
+        card.dataset.key = tt.key;
+        card.dataset.price = tt.price || 0;
+        card.dataset.name = tt.name;
+
+        const soldOut = tt.total > 0 && tt.remaining !== undefined && tt.remaining <= 0;
+        if (soldOut) card.style.opacity = '0.45';
+
+        card.innerHTML = `
+          <div class="tt-name">${tt.name}</div>
+          <div class="tt-price">₹${tt.price || 0}</div>
+          <div class="tt-desc">${tt.appliesTo || ''}${tt.description ? ' — ' + tt.description : ''}${soldOut ? '<br><span style="color:#ef4444">Sold Out</span>' : (tt.total > 0 ? '<br><span style="color:#94a3b8">'+tt.remaining+' left</span>' : '')}</div>
+        `;
+        if (!soldOut) {
+          card.addEventListener('click', () => selectTicketType(tt));
+        }
+        container.appendChild(card);
+      });
+    }
+
+    function selectTicketType(tt) {
+      document.querySelectorAll('.ticket-type-card').forEach(c => c.classList.remove('selected'));
+      const card = document.querySelector(`.ticket-type-card[data-key="${tt.key}"]`);
+      if (card) card.classList.add('selected');
+      document.getElementById('passType').value = tt.key;
+      document.getElementById('passName').value = tt.name;
+      document.getElementById('amountPaid').value = tt.price || 0;
+    }
+
+    // ── Misc UI handlers ─────────────────────────────────────────────────────
+    document.getElementById('category').addEventListener('change', function () {
+      document.getElementById('teamMembersSection').style.display = this.value === 'Team' ? 'block' : 'none';
+    });
+
+    // ── Form submit ──────────────────────────────────────────────────────────
+    document.getElementById('ticketForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      if (!document.getElementById('eventSelect').value) {
+        showAlert('Please select an event first.', 'error');
+        return;
+      }
+      if (!document.getElementById('passType').value) {
+        showAlert('Please select a pass / ticket type.', 'error');
+        return;
+      }
+
+      const formData = {
+        fullName: document.getElementById('fullName').value.trim(),
+        mobile: document.getElementById('mobile').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        college: document.getElementById('college').value.trim(),
+        courseYear: document.getElementById('courseYear').value.trim(),
+        category: document.getElementById('category').value,
+        subCategory: Array.from(document.querySelectorAll('input[name="activities"]:checked')).map(cb => cb.value),
+        teamMembers: document.getElementById('teamMembers').value.split(',').map(m => m.trim()).filter(Boolean),
+        passType: document.getElementById('passType').value,
+        passName: document.getElementById('passName').value,
+        amountPaid: parseInt(document.getElementById('amountPaid').value) || 0,
+        paymentMode: document.getElementById('paymentMode').value,
+        portfolio: document.getElementById('portfolio').value.trim(),
+        github: document.getElementById('github').value.trim(),
+        instagram: document.getElementById('instagram').value.trim(),
+        eventId: document.getElementById('eventSelect').value,
+        eventShortName: selectedEvent ? (selectedEvent.shortName || selectedEvent.name) : '',
+      };
+
+      if (formData.mobile.length !== 10) { showAlert('Please enter a valid 10-digit mobile number', 'error'); return; }
+      if (formData.subCategory.length === 0) { showAlert('Please select at least one activity', 'error'); return; }
+
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div>';
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/ticket/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.msg || 'Failed to generate ticket');
+        currentTicketData = data;
+        displayTicket(data);
+        showAlert('Ticket generated successfully!', 'success');
+      } catch (err) {
+        let msg = err.message;
+        if (msg.includes('Failed to fetch') || err.name === 'TypeError') msg = `Cannot connect to backend at ${BACKEND_URL}. Make sure the backend is running!`;
+        showAlert(msg, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '🎟️ Generate Ticket';
+      }
+    });
+
+    // ── Display generated ticket ─────────────────────────────────────────────
+    function displayTicket(data) {
+      const eventName = data.eventName || (selectedEvent ? selectedEvent.name : 'TechMNHub Event');
+      document.getElementById('previewEventName').textContent = eventName.toUpperCase();
+      document.getElementById('previewEventTagline').textContent =
+        (selectedEvent && selectedEvent.tagline) ? selectedEvent.tagline : 'Where Talent Takes Shape';
+
+      document.getElementById('qrCodeImage').src = data.qrCode;
+      document.getElementById('registrationId').textContent = data.registrationId;
+
+      const u = data.user;
+      document.getElementById('ticketDetails').innerHTML = `
+        <div class="detail-row"><span class="detail-label">Name:</span><span class="detail-value">${u.fullName}</span></div>
+        <div class="detail-row"><span class="detail-label">Email:</span><span class="detail-value">${u.email}</span></div>
+        <div class="detail-row"><span class="detail-label">Mobile:</span><span class="detail-value">${u.mobile}</span></div>
+        <div class="detail-row"><span class="detail-label">College:</span><span class="detail-value">${u.college}</span></div>
+        <div class="detail-row"><span class="detail-label">Category:</span><span class="detail-value">${u.category}</span></div>
+        <div class="detail-row"><span class="detail-label">Activities:</span><span class="detail-value">${(u.subCategory || []).join(', ')}</span></div>
+        ${u.teamMembers && u.teamMembers.length > 0 ? `<div class="detail-row"><span class="detail-label">Team Members:</span><span class="detail-value">${u.teamMembers.join(', ')}</span></div>` : ''}
+        <div class="detail-row"><span class="detail-label">Pass Type:</span><span class="detail-value">${u.passName}</span></div>
+        <div class="detail-row"><span class="detail-label">Amount Paid:</span><span class="detail-value">₹${u.amountPaid}</span></div>
+        <div class="detail-row"><span class="detail-label">Payment Mode:</span><span class="detail-value">${u.paymentMode}</span></div>
+      `;
+
+      document.getElementById('ticketPreview').classList.add('active');
+      document.getElementById('ticketPreview').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ── Download ticket HTML ─────────────────────────────────────────────────
+    function downloadTicketHTML() {
+      if (!currentTicketData) return;
+      const data = currentTicketData.user;
+      const qrCode = currentTicketData.qrCode;
+      const regId = currentTicketData.registrationId;
+      const eventName = currentTicketData.eventName || (selectedEvent ? selectedEvent.name : 'TechMNHub Event');
+      const eventDetails = selectedEvent
+        ? [selectedEvent.date ? new Date(selectedEvent.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '', selectedEvent.city || ''].filter(Boolean).join(' | ')
+        : '';
+
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>${eventName} - Ticket - ${regId}</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; padding: 20px; }
+    .ticket { max-width: 500px; background: #1e293b; border-radius: 20px; padding: 30px; border: 2px solid #06b6d4; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .title { font-size: 36px; font-weight: bold; color: #06b6d4; margin: 0; }
+    .subtitle { color: #94a3b8; }
+    .qr-code { text-align: center; margin: 20px 0; }
+    .qr-code img { width: 200px; height: 200px; border-radius: 10px; border: 2px solid #06b6d4; }
+    .details { background: #0f172a; padding: 20px; border-radius: 10px; }
+    .detail-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .detail-row:last-child { border-bottom: none; }
+    .label { color: #94a3b8; } .value { color: white; font-weight: bold; }
+    .registration-id { font-size: 24px; color: #06b6d4; text-align: center; letter-spacing: 2px; margin: 20px 0; font-weight: bold; }
+    .footer { text-align: center; margin-top: 20px; color: #64748b; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="ticket">
+    <div class="header">
+      <h1 class="title">${eventName.toUpperCase()}</h1>
+      <p class="subtitle">${(selectedEvent && selectedEvent.tagline) ? selectedEvent.tagline : 'Where Talent Takes Shape'}</p>
+    </div>
+    <div class="qr-code"><img src="${qrCode}" alt="QR Code" /></div>
+    <div class="registration-id">${regId}</div>
+    <div class="details">
+      <div class="detail-row"><span class="label">Name:</span><span class="value">${data.fullName}</span></div>
+      <div class="detail-row"><span class="label">Email:</span><span class="value">${data.email}</span></div>
+      <div class="detail-row"><span class="label">Mobile:</span><span class="value">${data.mobile}</span></div>
+      <div class="detail-row"><span class="label">College:</span><span class="value">${data.college}</span></div>
+      <div class="detail-row"><span class="label">Category:</span><span class="value">${data.category}</span></div>
+      <div class="detail-row"><span class="label">Activities:</span><span class="value">${(data.subCategory || []).join(', ')}</span></div>
+      ${data.teamMembers && data.teamMembers.length > 0 ? `<div class="detail-row"><span class="label">Team:</span><span class="value">${data.teamMembers.join(', ')}</span></div>` : ''}
+      <div class="detail-row"><span class="label">Pass:</span><span class="value">${data.passName}</span></div>
+      <div class="detail-row"><span class="label">Amount Paid:</span><span class="value">₹${data.amountPaid}</span></div>
+    </div>
+    <div class="footer">
+      ${eventDetails ? `<p>📅 ${eventDetails}</p>` : ''}
+      <p>Show this QR code at the venue for entry</p>
+      <p>© TechMNHub. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(eventName || 'ticket').replace(/\s+/g, '_')}_${regId}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showAlert('Ticket downloaded!', 'success');
+    }
+
+    // ── Send email ────────────────────────────────────────────────────────────
+    async function sendTicketEmail() {
+      if (!currentTicketData) return;
+      const btn = event.target;
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div>';
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/ticket/send-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: currentTicketData.user._id }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.msg || 'Failed to send email');
+        showAlert('Email sent successfully!', 'success');
+      } catch (err) {
+        showAlert(err.message || 'Failed to send email', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '📧 Send Email';
+      }
+    }
+
+    // ── Reset ─────────────────────────────────────────────────────────────────
+    function resetForm() {
+      document.getElementById('ticketForm').reset();
+      document.getElementById('ticketPreview').classList.remove('active');
+      currentTicketData = null;
+      document.getElementById('generateBtn').disabled = false;
+      document.getElementById('generateBtn').innerHTML = '🎟️ Generate Ticket';
+      document.getElementById('passType').value = '';
+      document.getElementById('passName').value = '';
+      document.querySelectorAll('.ticket-type-card').forEach(c => c.classList.remove('selected'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showAlert(message, type) {
+      const el = document.getElementById('alert');
+      el.textContent = message;
+      el.className = `alert alert-${type} active`;
+      setTimeout(() => el.classList.remove('active'), 5000);
+    }
+  </script>
+</body>
+</html>
   <style>
     * {
       margin: 0;
@@ -290,38 +817,6 @@
       100% { transform: rotate(360deg); }
     }
 
-    .hackathon-members-section {
-      background: rgba(6, 182, 212, 0.1);
-      padding: 20px;
-      border-radius: 10px;
-      margin-top: 20px;
-      border: 2px solid rgba(6, 182, 212, 0.3);
-    }
-
-    .hackathon-members-section h3 {
-      color: #06b6d4;
-      margin-bottom: 15px;
-    }
-
-    .member-card {
-      background: rgba(15, 23, 42, 0.8);
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      border: 2px solid rgba(6, 182, 212, 0.2);
-    }
-
-    .member-card:last-child {
-      margin-bottom: 0;
-    }
-
-    .member-number {
-      color: #06b6d4;
-      font-weight: bold;
-      margin-bottom: 10px;
-      display: inline-block;
-    }
-
     @media (max-width: 768px) {
       .form-row,
       .action-buttons {
@@ -396,47 +891,32 @@
         </div>
 
         <!-- Activities Selection -->
-        <div class="form-group" id="activitiesSection">
+        <div class="form-group">
           <label>Activities/Skills *</label>
           <div class="checkbox-group">
-            <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Dancing"> Dancing
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Singing"> Singing
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Ramp Walk/Modeling"> Ramp Walk/Modeling
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Stand-up Comedy"> Stand-up Comedy
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Poetry"> Poetry
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Ideathon"> Ideathon
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Marketing Idea Challenge"> Marketing Idea Challenge
-            </label>
             <label class="checkbox-item">
               <input type="checkbox" name="activities" value="Hackathon"> Hackathon
             </label>
             <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Debate Competition"> Debate Competition
+              <input type="checkbox" name="activities" value="Coding"> Coding
             </label>
             <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Quiz Competition"> Quiz Competition
+              <input type="checkbox" name="activities" value="Design"> Design
             </label>
             <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Presentation"> Presentation
+              <input type="checkbox" name="activities" value="Photography"> Photography
             </label>
             <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Speech"> Speech
+              <input type="checkbox" name="activities" value="Dance"> Dance
             </label>
             <label class="checkbox-item">
-              <input type="checkbox" name="activities" value="Painting/Drawing and Sketching"> Painting/Drawing and Sketching
+              <input type="checkbox" name="activities" value="Music"> Music
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" name="activities" value="Drama"> Drama
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" name="activities" value="Art"> Art
             </label>
           </div>
         </div>
@@ -445,24 +925,6 @@
         <div class="form-group" id="teamMembersSection" style="display: none;">
           <label>Team Members (comma-separated)</label>
           <textarea id="teamMembers" placeholder="Enter team member names separated by commas"></textarea>
-        </div>
-
-        <!-- Hackathon Team Members Section -->
-        <div class="form-group" id="hackathonSection" style="display: none;">
-          <label>Hackathon Team Members *</label>
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 10px; color: #94a3b8;">Number of Team Members (3-6) *</label>
-            <select id="hackathonTeamCount" style="width: 150px;">
-              <option value="">Select Count</option>
-              <option value="3">3 Members</option>
-              <option value="4">4 Members</option>
-              <option value="5">5 Members</option>
-              <option value="6">6 Members</option>
-            </select>
-          </div>
-          <div id="hackathonMembersForm" class="hackathon-members-section" style="display: none;">
-            <!-- Dynamic member input fields will be generated here -->
-          </div>
         </div>
 
         <!-- Pass Type -->
@@ -515,11 +977,6 @@
         <button type="submit" class="btn" id="generateBtn">
           🎟️ Generate Ticket
         </button>
-
-        <!-- Test Email Button -->
-        <button type="button" class="btn btn-secondary" onclick="testSendEmail()" style="margin-top: 10px;">
-          📧 Test Send Email
-        </button>
       </form>
     </div>
 
@@ -532,11 +989,11 @@
 
       <div class="qr-code-container">
         <img id="qrCodeImage" src="" alt="QR Code">
-        <p style="margin-top: 10px; color: #94a3b8; font-size: 0.9rem;">Scan at venue entrance.</p>
+        <p style="margin-top: 10px; color: #94a3b8; font-size: 0.9rem;">Scan at venue entrance</p>
       </div>
 
       <div class="registration-id" id="registrationId">
-        LOADING....
+        LOADING...
       </div>
 
       <div class="ticket-details" id="ticketDetails">
@@ -562,7 +1019,7 @@
 
   <script>
     // Backend URL - Update this with your backend server
-    const BACKEND_URL = 'https://techmnhub-backend.onrender.com'; // Change to your backend URL
+    const BACKEND_URL = 'https://techmnhub-backend.onrender.com';
     
     let currentTicketData = null;
 
@@ -586,76 +1043,7 @@
     // Show/hide team members section based on category
     document.getElementById('category').addEventListener('change', function() {
       const teamSection = document.getElementById('teamMembersSection');
-      const activitiesSection = document.getElementById('activitiesSection');
-      const activityCheckboxes = document.querySelectorAll('input[name="activities"]');
-      const isVisitor = this.value === 'Visitor';
-
       teamSection.style.display = this.value === 'Team' ? 'block' : 'none';
-      activitiesSection.style.display = isVisitor ? 'none' : 'block';
-
-      if (isVisitor) {
-        activityCheckboxes.forEach((checkbox) => {
-          checkbox.checked = false;
-        });
-      }
-    });
-
-    // Hackathon team member selection
-    document.addEventListener('change', function(e) {
-      if (e.target.name === 'activities' && e.target.value === 'Hackathon') {
-        const hackathonSection = document.getElementById('hackathonSection');
-        hackathonSection.style.display = e.target.checked ? 'block' : 'none';
-        
-        if (!e.target.checked) {
-          // Clear when unchecked
-          document.getElementById('hackathonTeamCount').value = '';
-          document.getElementById('hackathonMembersForm').style.display = 'none';
-          document.getElementById('hackathonMembersForm').innerHTML = '';
-        }
-      }
-    });
-
-    // Generate member input fields based on count
-    document.getElementById('hackathonTeamCount').addEventListener('change', function() {
-      const count = parseInt(this.value);
-      const membersForm = document.getElementById('hackathonMembersForm');
-      
-      if (count < 3 || count > 6) {
-        membersForm.style.display = 'none';
-        membersForm.innerHTML = '';
-        return;
-      }
-      
-      let html = '<h3>Enter Team Member Details</h3>';
-      for (let i = 1; i <= count; i++) {
-        html += `
-          <div class="member-card">
-            <div class="member-number">Member ${i}</div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Full Name *</label>
-                <input type="text" class="hackathon-member-name" placeholder="Member ${i} name" required>
-              </div>
-              <div class="form-group">
-                <label>Email *</label>
-                <input type="email" class="hackathon-member-email" placeholder="member${i}@example.com" required>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Mobile Number *</label>
-                <input type="tel" class="hackathon-member-mobile" placeholder="10-digit number" maxlength="10" required>
-              </div>
-              <div class="form-group">
-                <label>City *</label>
-                <input type="text" class="hackathon-member-city" placeholder="City" required>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-      membersForm.innerHTML = html;
-      membersForm.style.display = 'block';
     });
 
     // Update amount when pass type changes
@@ -697,44 +1085,9 @@
         return;
       }
 
-      const isVisitorCategory = formData.category === 'Visitor';
-      const isHackathon = formData.subCategory.includes('Hackathon');
-
-      if (!isVisitorCategory && formData.subCategory.length === 0) {
+      if (formData.subCategory.length === 0) {
         showAlert('Please select at least one activity', 'error');
         return;
-      }
-
-      // Backend currently requires at least one subCategory value.
-      if (isVisitorCategory && formData.subCategory.length === 0) {
-        formData.subCategory = ['Visitor'];
-      }
-
-      // Validate Hackathon team members if selected
-      let hackathonMembers = [];
-      if (isHackathon) {
-        const memberNames = document.querySelectorAll('.hackathon-member-name');
-        if (memberNames.length === 0) {
-          showAlert('Please enter hackathon team member details', 'error');
-          return;
-        }
-
-        for (let i = 0; i < memberNames.length; i++) {
-          const name = memberNames[i].value.trim();
-          const email = document.querySelectorAll('.hackathon-member-email')[i].value.trim();
-          const mobile = document.querySelectorAll('.hackathon-member-mobile')[i].value.trim();
-          const city = document.querySelectorAll('.hackathon-member-city')[i].value.trim();
-
-          if (!name || !email || !mobile || !city) {
-            showAlert('Please fill all team member details', 'error');
-            return;
-          }
-          if (mobile.length !== 10) {
-            showAlert(`Member ${i + 1} mobile must be 10 digits`, 'error');
-            return;
-          }
-          hackathonMembers.push({ name, email, mobile, city });
-        }
       }
 
       // Show loading
@@ -743,74 +1096,33 @@
       btn.innerHTML = '<div class="spinner"></div>';
 
       try {
-        // If Hackathon, generate multiple tickets
-        if (isHackathon && hackathonMembers.length > 0) {
-          let successCount = 0;
-          const tickets = [];
-          
-          for (let member of hackathonMembers) {
-            const memberData = { ...formData };
-            memberData.fullName = member.name;
-            memberData.email = member.email;
-            memberData.mobile = member.mobile;
-            memberData.city = member.city;
-            
-            console.log('🔄 Generating ticket for:', member.name);
-            
-            const response = await fetch(`${BACKEND_URL}/api/ticket/generate`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(memberData)
-            });
+        console.log('🔄 Sending request to:', `${BACKEND_URL}/api/ticket/generate`);
+        console.log('📦 Form data:', formData);
+        
+        // Call backend API
+        const response = await fetch(`${BACKEND_URL}/api/ticket/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
 
-            if (!response.ok) {
-              const data = await response.json();
-              throw new Error(`Failed for ${member.name}: ${data.msg}`);
-            }
-            
-            const data = await response.json();
-            tickets.push(data);
-            successCount++;
-            console.log('✅ Ticket generated for:', member.name);
-          }
-          
-          // Store the first ticket for display
-          currentTicketData = tickets[0];
-          currentTicketData.hackathonTickets = tickets;
-          
-          displayTicket(currentTicketData);
-          showAlert(`✅ Successfully generated ${successCount} tickets for hackathon team!`, 'success');
-        } else {
-          // Single ticket generation
-          console.log('🔄 Sending request to:', `${BACKEND_URL}/api/ticket/generate`);
-          console.log('📦 Form data:', formData);
-          
-          const response = await fetch(`${BACKEND_URL}/api/ticket/generate`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-          });
+        console.log('📡 Response status:', response.status);
+        
+        const data = await response.json();
+        console.log('📥 Response data:', data);
 
-          console.log('📡 Response status:', response.status);
-          
-          const data = await response.json();
-          console.log('📥 Response data:', data);
-
-          if (!response.ok) {
-            throw new Error(data.msg || 'Failed to generate ticket');
-          }
-
-          // Store ticket data
-          currentTicketData = data;
-
-          // Display ticket
-          displayTicket(data);
-          showAlert('Ticket generated successfully!', 'success');
+        if (!response.ok) {
+          throw new Error(data.msg || 'Failed to generate ticket');
         }
+
+        // Store ticket data
+        currentTicketData = data;
+
+        // Display ticket
+        displayTicket(data);
+        showAlert('Ticket generated successfully!', 'success');
 
       } catch (error) {
         console.error('❌ Error details:', error);
@@ -834,11 +1146,6 @@
       
       // Update Registration ID
       document.getElementById('registrationId').textContent = data.registrationId;
-
-      const isVisitorCategory = data.user.category === 'Visitor';
-      const activityText = !isVisitorCategory && data.user.subCategory && data.user.subCategory.length > 0
-        ? data.user.subCategory.join(', ')
-        : 'N/A';
       
       // Update Details
       const detailsHTML = `
@@ -864,7 +1171,7 @@
         </div>
         <div class="detail-row">
           <span class="detail-label">Activities:</span>
-          <span class="detail-value">${activityText}</span>
+          <span class="detail-value">${data.user.subCategory.join(', ')}</span>
         </div>
         ${data.user.teamMembers && data.user.teamMembers.length > 0 ? `
         <div class="detail-row">
@@ -901,10 +1208,6 @@
       const data = currentTicketData.user;
       const qrCode = currentTicketData.qrCode;
       const regId = currentTicketData.registrationId;
-      const isVisitorCategory = data.category === 'Visitor';
-      const activityText = !isVisitorCategory && data.subCategory && data.subCategory.length > 0
-        ? data.subCategory.join(', ')
-        : 'N/A';
       
       const ticketHTML = `
 <!DOCTYPE html>
@@ -964,7 +1267,7 @@
       </div>
       <div class="detail-row">
         <span class="label">Activities:</span>
-        <span class="value">${activityText}</span>
+        <span class="value">${data.subCategory.join(', ')}</span>
       </div>
       ${data.teamMembers && data.teamMembers.length > 0 ? `
       <div class="detail-row">
@@ -1042,12 +1345,6 @@
     function resetForm() {
       document.getElementById('ticketForm').reset();
       document.getElementById('ticketPreview').classList.remove('active');
-      document.getElementById('teamMembersSection').style.display = 'none';
-      document.getElementById('activitiesSection').style.display = 'block';
-      document.getElementById('hackathonSection').style.display = 'none';
-      document.getElementById('hackathonTeamCount').value = '';
-      document.getElementById('hackathonMembersForm').innerHTML = '';
-      document.getElementById('hackathonMembersForm').style.display = 'none';
       currentTicketData = null;
       document.getElementById('generateBtn').disabled = false;
       document.getElementById('generateBtn').innerHTML = '🎟️ Generate Ticket';
@@ -1062,80 +1359,6 @@
       setTimeout(() => {
         alert.classList.remove('active');
       }, 5000);
-    }
-
-    async function testSendEmail() {
-      // First, generate a test ticket to get a userId
-      const testFormData = {
-        fullName: 'Test User ' + Date.now(),
-        mobile: '9876543210',
-        email: `test_${Date.now()}@example.com`,
-        city: 'Muzaffarnagar',
-        college: 'Test College',
-        courseYear: 'B.Tech 2nd Year',
-        category: 'Individual',
-        subCategory: ['Presentation'],
-        teamMembers: [],
-        passName: 'Pro Participation - ₹150',
-        amountPaid: 150,
-        paymentMode: 'Cash',
-        portfolio: '',
-        github: '',
-        instagram: ''
-      };
-
-      const btn = event.target;
-      btn.disabled = true;
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<div class="spinner"></div>';
-
-      try {
-        console.log('📧 Generating test ticket for email...');
-        
-        // Step 1: Generate test ticket
-        const genResponse = await fetch(`${BACKEND_URL}/api/ticket/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(testFormData)
-        });
-
-        if (!genResponse.ok) {
-          const data = await genResponse.json();
-          throw new Error(`Failed to generate test ticket: ${data.msg}`);
-        }
-
-        const ticketData = await genResponse.json();
-        console.log('✅ Test ticket generated:', ticketData.registrationId);
-
-        // Step 2: Send test email
-        console.log('📤 Sending test email...');
-        const emailResponse = await fetch(`${BACKEND_URL}/api/ticket/send-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            userId: ticketData.user._id
-          })
-        });
-
-        const emailData = await emailResponse.json();
-
-        if (!emailResponse.ok) {
-          throw new Error(emailData.msg || 'Failed to send email');
-        }
-
-        console.log('✅ Test email sent to:', emailData.email);
-        showAlert(`✅ Test email sent successfully to ${emailData.email}!\n\nTest Ticket Registration ID: ${ticketData.registrationId}`, 'success');
-      } catch (error) {
-        console.error('❌ Error:', error);
-        showAlert(`❌ Test email failed: ${error.message}`, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-      }
     }
   </script>
 </body>
